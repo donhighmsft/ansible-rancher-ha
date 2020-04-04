@@ -5,6 +5,7 @@
  re_run_rancherinstall re_run_prereqinstall re_run_loadbalancerinstall build_nginx_rke_and_rancher
 
 DOCKERIMAGE=ansible-rke:v1.2 #Docker Image
+#DOCKERIMAGE=donghigh/ansible-rke:v1.2 #Docker Image from repository
 
 create_docker_image: ## Build the container
 	@docker build -t ${DOCKERIMAGE} .
