@@ -1,0 +1,24 @@
+---
+
+roles:
+  # Install a role from Ansible Galaxy.
+  - src: singleplatform-eng.users 
+    version: v1.2.6
+
+  - src: geerlingguy.docker
+    version: 2.7.0
+
+  - src: geerlingguy.firewall
+    version: 2.5.0
+
+  - src: jdauphant.nginx
+    version: v2.21.2
+
+  - src: nginxinc.nginx
+    version: 0.13.0
+
+collections:
+  # Install a collection from Ansible Galaxy.
+- name: community.kubernetes
+  version: 0.10.0
+

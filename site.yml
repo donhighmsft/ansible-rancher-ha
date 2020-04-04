@@ -1,0 +1,10 @@
+---
+- import_playbook: rancher_kubernetes_node.yml
+  tags:
+    - prereq
+- import_playbook: rancher_load_balancer.yml
+  tags:
+    - loadbalancer
+- import_playbook: rke-cluster.yml
+  tags:
+    - rancher

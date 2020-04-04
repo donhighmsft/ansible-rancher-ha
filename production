@@ -1,0 +1,33 @@
+# Your Nodes Ip Addresses
+# Uncomment nodes if more nodes are needed
+# You can also create ansible dynamic inventory files
+
+rk8s-lb-1 ansible_host=40.84.239.18
+rk8s-node-1 ansible_host=40.84.132.84
+#rk8s-node-2 ansible_host=222.222.222.222
+#rk8s-node-3 ansible_host=333.333.333.333
+#rk8s-node-4 ansible_host=444.444.444.444
+#rk8s-node-5 ansible_host=555.555.555.555
+#rk8s-node-6 ansible_host=666.666.666.666
+#rk8s-node-7 ansible_host=777.777.777.777
+
+# Add Nodes to the List
+[rancher_kubernetes_nodes]
+rk8s-node-1
+#rk8s-node-2
+#rk8s-node-3
+#rk8s-node-4
+#rk8s-node-5
+#rk8s-node-6
+#rk8s-node-7
+
+# Add LB to the List
+[rancher_kubernetes_lb]
+rk8s-lb-1
+
+[loadbalancer]
+rk8s-lb-1
+
+# Local node running k8s commands
+[local]
+127.0.0.1 ansible_connection=local

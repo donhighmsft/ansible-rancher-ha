@@ -1,0 +1,5 @@
+# variables for ALL NODES
+ansible_user: rke
+ansible_python_interpreter: /usr/bin/python3
+rancher_lb_hostname: rke-lb-node22.southcentralus.cloudapp.azure.com #Must Change Loadbalancer DNS Name
+usersshkey: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"

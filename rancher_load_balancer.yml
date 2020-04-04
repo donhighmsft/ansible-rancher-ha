@@ -1,0 +1,8 @@
+---
+- name: Rancher Load Balancers
+  hosts: rancher_kubernetes_lb
+  roles:
+     - rkeserver.common
+     - geerlingguy.firewall
+     - nginxinc.nginx
+     - jdauphant.nginx

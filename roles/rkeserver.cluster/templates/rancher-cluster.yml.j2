@@ -1,0 +1,14 @@
+#{{ ansible_managed }}
+
+nodes:
+  {% for host in groups['rancher_kubernetes_nodes'] %}
+- address: "{{ hostvars[host]['ansible_host'] }}"
+    user: "{{ hostvars[host].users[0].username }}"
+    role: [controlplane,worker,etcd]
+  {% endfor %}
+
+services:
+  etcd:
+    snapshot: true
+    creation: 6h
+    retention: 24h

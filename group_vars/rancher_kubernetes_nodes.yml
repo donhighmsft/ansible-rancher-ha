@@ -1,0 +1,32 @@
+---
+# Variables for group rancher_kubernetes_nodes
+docker_package: "docker-ce=5:18.09.6~3-0~ubuntu-bionic"
+docker_package_state: present
+
+users:
+  - username: rancherk8s
+    name: Rancher Kubernetes
+    password: ee26b0dd4af7e749aa1a8ee3c10ae9923f618980772e473f8819a5d4940e0db27ac185f8a0e1d5f84f88bc887fd67b143732c304cc5fa9ad8e6f57f50028a8ff
+    groups: ['docker']
+    uid: 1001
+    ssh_key:
+      - "{{usersshkey}}"
+      #- "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC8Om0gOGvnsFxjJkXGyryWMFhZaF6gABivBVZtL/G+XXL5ERo2VM2mfLRLAo7k39/EXO/qKlnhoH8eGXX62Dv0pj/OMB0MXdnKizeU79wITm9RKH5oDnHd1E0IoURXjlwSRDrcAUptJZi/uMd7aGdy8fSa6iElTXjo8qcNwUqRvppgplKOsXZIgqWQ16XqykLwoH8BQoyEgGivksQ2eih2ua2ZgxmR0TsulAE4EtPzVjXlNuJQtQjcCocaMTuvdLSgi+dHCO46zd+Apuxgu1W5s/aFlqh0Tflvy+tU+dRd7H6mWNrhY629pJ2Sg2XQ9mdsntKL1mPMcli25c62iCYr donhigh@Dons-MBP-Work-2.lan1"
+
+firewall_allowed_tcp_ports:
+  - "22"
+  - "80"
+  - "443"
+  - "2376"
+  - "2379"
+  - "2380"
+  - "6443"
+  - "9099"
+  - "10250"
+  - "10254"
+firewall_allowed_udp_ports:
+  - "8472"
+firewall_additional_rules:
+  - "iptables -A INPUT -p tcp --match multiport --dports 30000:32767 -j ACCEPT"
+  - "iptables -A INPUT -p udp --match multiport --dports 30000:32767 -j ACCEPT"
+

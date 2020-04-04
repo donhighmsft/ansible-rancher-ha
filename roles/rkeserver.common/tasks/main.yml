@@ -1,0 +1,5 @@
+---
+# tasks file for rkeserver.common
+
+- name: Install Vim 
+  package: name=vim state=present

@@ -1,0 +1,36 @@
+
+---
+# Variables for group rancher_kubernetes_lb
+firewall_allowed_tcp_ports:
+  - "22"
+  - "80"
+  - "443"
+
+
+nginx_installation_type: configuration-only
+
+nginx_worker_rlimit_nofile: 40000
+
+nginx_events_params:
+  - worker_connections 8192
+
+nginx_sites:
+  server:
+    - listen 80
+    - return 301 https://$host$request_uri
+
+suppress_default_site: true
+
+nginx_stream_configs:
+  upstream:
+    - upstream rancher_servers {
+        least_conn;
+        {% for host in groups['rancher_kubernetes_nodes'] %}
+          server {{ hostvars[host]['ansible_host'] }}:443 max_fails=3 fail_timeout=5s;
+        {% endfor %}
+      }
+  server:
+    - server {
+        listen 443;
+        proxy_pass rancher_servers;
+      }

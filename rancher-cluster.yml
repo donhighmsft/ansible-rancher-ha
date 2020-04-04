@@ -1,0 +1,12 @@
+#Ansible managed
+
+nodes:
+  - address: "40.84.132.84"
+    user: "rancherk8s"
+    role: [controlplane,worker,etcd]
+  
+services:
+  etcd:
+    snapshot: true
+    creation: 6h
+    retention: 24h

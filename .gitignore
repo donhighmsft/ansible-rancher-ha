@@ -1,0 +1,6 @@
+
+ansible_collections/*
+roles/*
+!roles/rkeserver*/
+!roles/rkeserver*/**
+commands.txt

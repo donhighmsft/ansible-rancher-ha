@@ -1,0 +1,210 @@
+---
+# tasks file for rkeserver.cluster
+
+- name: Create the rancher-cluster.yml file
+  local_action:
+    module: template
+    src: rancher-cluster.yml.j2
+    dest: /rke-ansible/rancher-cluster.yml
+
+- name: Pause for 20 secs to get clusters ready and Make Sure Nodes
+  pause: seconds=20
+- name: Install The RKE Cluster
+  block:
+    - name: Check file rancher-cluster.rkestate exists example.
+      stat:
+        path: rancher-cluster.rkestate
+      register: rkestate_details
+    
+    - name: Remove RKE Cluster with rke remove
+      shell: rke remove --config rancher-cluster.yml --force
+      register: rkeremove
+      failed_when: 
+      - "'Cluster removed successfully' not in rkeremove.stdout" 
+      when: rkestate_details.stat.exists
+      changed_when: rkeremove.rc == 0
+      
+    - name: Pause for 10 secs Remove RKE Cluster
+      pause: seconds=10
+
+    - name: Bring Up The RKE Cluster with rke up
+      shell: rke up --config rancher-cluster.yml
+      register: rke
+      failed_when: 
+      - "'Finished building Kubernetes cluster successfully' not in rke.stdout"
+      - rke.rc > 0       
+      changed_when: rke.rc == 0
+
+    - debug: var=rke.stdout_lines
+
+    - name: Pause for 10 secs after RKE Cluster is Ready
+      pause: seconds=10
+    
+    - name: Wait for all rke canal pods pods become created
+      shell: "kubectl --kubeconfig kube_config_rancher-cluster.yml get po -n=kube-system -o=jsonpath='{.items[*].metadata.name}'"
+      register: rke_pods_created
+      until: item in rke_pods_created.stdout
+      retries: 10
+      delay: 30
+      with_items:
+        - canal
+      when: "'Finished building Kubernetes cluster successfully' in rke.stdout"
+    
+    - name: Wait for all rke canal pods become ready
+      shell: > 
+        kubectl --kubeconfig kube_config_rancher-cluster.yml wait pods 
+        -n=kube-system 
+        -l k8s-app=canal
+        --for=condition=Ready  
+        --timeout=600s
+      register: rke_pods_ready
+      when: "'Finished building Kubernetes cluster successfully' in rke.stdout"
+    - debug: var=rke_pods_ready.stdout_lines
+  rescue:
+    - debug: msg='Finished building Kubernetes cluster unsuccessfully'
+    - debug: msg="rkestate could be kurupt run rke remove --config rancher-cluster.yml"
+    - debug: msg="then re-run make run_playbook cmd='--limit local'"
+  any_errors_fatal: true
+
+- name: Pause for 10 secs after RKE Cluster is Ready
+  pause: seconds=10
+
+- name: Install Rancher Namespaces
+  block:
+    - name: Install the Rancher Namespaces exists.
+      k8s:
+        api_version: v1
+        kind: Namespace
+        name: "{{item}}"
+        state: present
+        kubeconfig: kube_config_rancher-cluster.yml
+      loop:
+        - cattle-system
+        - cert-manager
+      register: namespaces
+    
+    - name: Wait for Rancher Namespaces become created
+      shell: "kubectl --kubeconfig kube_config_rancher-cluster.yml get ns -o=jsonpath='{.items[*].metadata.name}'"
+      register: ns_created
+      until: item in ns_created.stdout
+      retries: 10
+      delay: 30
+      with_items:
+        - cattle-system
+        - cert-manager
+    
+    - name: Print the Namespaces variable.
+      debug: var=namespaces
+
+    - name: Pause for 5 secs after Namespaces become created
+      pause: seconds=5
+
+    - name: Install the CustomResourceDefinition resources Kubectl
+      shell: >
+        kubectl --kubeconfig kube_config_rancher-cluster.yml
+        apply -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.12/deploy/manifests/00-crds.yaml
+      register: crds
+    - debug: var=crds
+
+    - name: Wait for all CustomResourceDefinition become created
+      shell: "kubectl --kubeconfig kube_config_rancher-cluster.yml get crd -o=jsonpath='{.items[*].metadata.name}'"
+      register: crds_manager_pods_created
+      until: item in crds_manager_pods_created.stdout
+      retries: 10
+      delay: 30
+      with_items:
+        - certificaterequests.cert-manager.io
+        - certificates.cert-manager.io
+        - challenges.acme.cert-manager.io
+        - clusterissuers.cert-manager.io
+        - issuers.cert-manager.io
+        - orders.acme.cert-manager.io
+        
+    - name: Pause for 5 secs after CustomResourceDefinition become created
+      pause: seconds=5
+  rescue:
+    - debug: msg='CustomResourceDefinition unsuccessfully installed'
+    - debug: var=crds
+  when: "'Finished building Kubernetes cluster successfully' in rke.stdout"
+
+- name: Install Rancher Chart and SSL Configuration
+  block:
+    - name: Add the Rancher Helm repository
+      shell: >
+        helm --kubeconfig kube_config_rancher-cluster.yml repo add rancher-latest https://releases.rancher.com/server-charts/latest
+      register: rancherrepo
+    - debug: var=rancherrepo
+    - name: Add the Jetstack Helm repository
+      shell: >
+        helm --kubeconfig kube_config_rancher-cluster.yml repo add jetstack https://charts.jetstack.io
+      register: jetstack
+    - debug: var=jetstack
+    - name: Update your local Helm chart repository cache
+      shell: >
+        helm --kubeconfig kube_config_rancher-cluster.yml repo update
+      register: helmcache
+    - debug: var=helmcache
+    - name: Install the cert-manager Helm chart
+      shell: >
+        helm install --kubeconfig kube_config_rancher-cluster.yml cert-manager jetstack/cert-manager 
+        --namespace cert-manager 
+        --version v0.12.0
+      register: helmcertmanager
+    - debug: var=helmcertmanager
+
+    - name: Pause for 5 secs after cert-manager Helm chart install
+      pause: seconds=5
+
+    - name: Wait for all cert-manager rancher pods become created
+      shell: "kubectl --kubeconfig kube_config_rancher-cluster.yml get po -n=cert-manager -o=jsonpath='{.items[*].metadata.name}'"
+      register: cert_manager_pods_created
+      until: item in cert_manager_pods_created.stdout
+      retries: 10
+      delay: 30
+      with_items:
+        - cert-manager
+        - cert-manager-cainjector
+        - cert-manager-webhook
+      
+    - name: Wait for cert-manager pods become ready
+      shell: > 
+        kubectl --kubeconfig kube_config_rancher-cluster.yml wait pods 
+        -n=cert-manager 
+        -l helm.sh/chart=cert-manager-v0.12.0
+        --for=condition=Ready  
+        --timeout=600s
+      register: cert_manager_pods_ready
+     
+    - debug: var=cert_manager_pods_ready.stdout_lines
+  when: "'Finished building Kubernetes cluster successfully' in rke.stdout"
+
+- name: Install Rancher with Helm and Certificate
+  block:
+    - name: Install Rancher with Helm
+      shell: > 
+        helm install --kubeconfig kube_config_rancher-cluster.yml rancher rancher-latest/rancher
+        --namespace cattle-system
+        --set hostname={{rancher_lb_hostname}}
+      register: installrancher
+    - debug: var=installrancher
+    - name: Wait for Rancher cattle pods become ready
+      shell: > 
+        kubectl --kubeconfig kube_config_rancher-cluster.yml wait pods  
+        --namespace=cattle-system 
+        --for=condition=Ready 
+        -l app=rancher
+        --timeout=600s
+        --all
+      register: cattle_pods_ready
+    - debug: var=cattle_pods_ready.stdout_lines
+    - name: Wait for Rancher Rollout Status become ready
+      shell: > 
+        kubectl --kubeconfig kube_config_rancher-cluster.yml rollout status -w deploy/rancher
+        --namespace=cattle-system       
+      register: cattle_rollout_ready
+    - debug: var=cattle_rollout_ready.stdout_lines
+  when: "'Finished building Kubernetes cluster successfully' in rke.stdout"
+
+- name: Printing Rancher Loadbalancer Url
+  debug: var=rancher_lb_hostname
+  when: "'Finished building Kubernetes cluster successfully' in rke.stdout"
