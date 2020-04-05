@@ -36,18 +36,19 @@ The following actions will clone the repository, create a resource group, create
 ```sh
 # clone this repo
 $ git clone https://github.com/donhighmsft/ansible-rancher-ha.git
-#log into Azure
+# log into Azure
 $ az login
-#cd into main directory
+# cd into main directory
 $ cd ansible-rancher-ha
-#makefile creates 4 nodes total
-$ make create_azure_vm_setup_nodes nodes=3 
+# make setup-azure.sh executable
+$ chmod +x setup-azure.sh
+# makefile creates 4 nodes total
+$ make create_azure_vm_setup_nodes nodes=3
 ```
 
 - 1 Load balancer *`(rke-lb-ubuntu-node#-vm)`*
 - 1 DNS name *`(rke-lb-node#.southcentralus.cloudapp.azure.com)`*
 - 3 RKE nodes *`(rke-worker-ubuntu-node#-vm)`*
-
 
 ***#denotes a random generated numbers.***
 
