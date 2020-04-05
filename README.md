@@ -156,5 +156,5 @@ The following `Makefile` command will trigger the Main install.
 make build_nginx_rke_and_rancher
 ```
 
-This process will take some time so be patient. Depending on how many servers you provision determines the length of the process. You can also manually install the this process following this link [Installing Rancher on a Kubernetes Cluster
+This process will take some time so be patient. Depending on how many servers you provision determines the length of the process. You can also manually install using this process following this link [Installing Rancher on a Kubernetes Cluster
 ](https://rancher.com/docs/rancher/v2.x/en/installation/k8s-install/)
