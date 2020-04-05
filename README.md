@@ -44,7 +44,9 @@ $ cd ansible-rancher-ha
 $ make create_azure_vm_setup_nodes nodes=3 
 ```
 `#1 load balancer` *`(rke-lb-ubuntu-node#-vm)`*
+
 `#1 dns name` *`(rke-lb-node#.southcentralus.cloudapp.azure.com)`*
+
 `#3 rke nodes` *`(rke-worker-ubuntu-node#-vm)`*
 
 *#denotes a random generated numbers.*
