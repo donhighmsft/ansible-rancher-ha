@@ -17,7 +17,7 @@ You will need at least two publicly available servers to complete this install. 
 
 One server will be a dedicated load balancer. You can also use any clouds load balancer, but in this quickstart install uses nginx.
 
-Another server (or several, 1,3,5,7) will become the High Availability (HA) Cluster Nodes onto which we install Rancher 2 and Kubernetes. Each node will fulfill one or several roles in our cluster, all of which will be managed by our Ansible configuration.
+Another server (or several servers, *1,3,5, and 7*) will become the High Availability (HA) Cluster Nodes onto which we install Rancher 2 and Kubernetes. Each node will fulfill one or several roles in our cluster, all of which will be managed by our Ansible configuration.
 
 **NOTE:** This is a work in progress. As of this writing it will provision an *Ubuntu 18.04* and *Rancher 2.4.x* environment with static hosts.
 
@@ -43,13 +43,13 @@ $ cd ansible-rancher-ha
 #makefile creates 4 nodes total
 $ make create_azure_vm_setup_nodes nodes=3 
 ```
-`#1 load balancer` *`(rke-lb-ubuntu-node#-vm)`*
 
-`#1 dns name` *`(rke-lb-node#.southcentralus.cloudapp.azure.com)`*
+- 1 Load balancer *`(rke-lb-ubuntu-node#-vm)`*
+- 1 DNS name *`(rke-lb-node#.southcentralus.cloudapp.azure.com)`*
+- 3 RKE nodes *`(rke-worker-ubuntu-node#-vm)`*
 
-`#3 rke nodes` *`(rke-worker-ubuntu-node#-vm)`*
 
-*#denotes a random generated numbers.*
+***#denotes a random generated numbers.***
 
 *`The script opens all network security groups for the virtual machines that will later be configured by ansible`*
 
@@ -59,18 +59,22 @@ Once the virtual machines are created you will need the ip addresses and dns nam
 
 The project uses a static ansible inventory file. Static entries go into `production` file in root folder. All hosts and groups will then be collected into `rancher_kubernetes_nodes`, `rancher_kubernetes_lb`, and `local` for processing by the playbooks themselves. 
 
-`rk8s-lb-1 ansible_host=000.000.000.000 #load balancer ip`
-`rk8s-node-1 ansible_host=111.111.111.111 #node 1 ip`
-`rk8s-node-2 ansible_host=222.222.222.222 #node 2 ip`
-`rk8s-node-3 ansible_host=333.333.333.333 #node 3 ip`
+```ini
+rk8s-lb-1 ansible_host=000.000.000.000 #load balancer ip
+rk8s-node-1 ansible_host=111.111.111.111 #node 1 ip
+rk8s-node-2 ansible_host=222.222.222.222 #node 2 ip
+rk8s-node-3 ansible_host=333.333.333.333 #node 3 ip
+```
 
-`[rancher_kubernetes_nodes]`
-`rk8s-node-1`
-`rk8s-node-2`
-`rk8s-node-3`
+```ini
+[rancher_kubernetes_nodes]`
+rk8s-node-1
+rk8s-node-2
+rk8s-node-3
 
-`[rancher_kubernetes_lb]`
-`rk8s-lb-1`
+[rancher_kubernetes_lb]
+rk8s-lb-1
+```
 
 ## Ansible group_vars
 
@@ -84,9 +88,9 @@ rancher_lb_hostname: rke-lb-node{number}.southcentralus.cloudapp.azure.com
 usersshkey: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
 ```
 
-*#denotes a random generated numbers.*
+***#denotes a random generated numbers.***
 
-## Build Docker Image or Pull Docker Image.
+## Build Docker Image or Pull Docker Image
 
 Before you can run the `Makefile` ansible tasks you must build the docker image or pull it from docker hub repository.
 
@@ -96,7 +100,7 @@ The following `Makefile` command will build the image needed to run Ansible, RKE
 make create_docker_image
 ```
 
-## Ansible inventory test.
+## Ansible inventory test
 
 The included `Makefile` comes with numerous commands to help provision the Rancher HA Cluster. Before you build the cluster you must make sure you can `ping` the `load balancer` and `rke nodes` with ansible. If the nodes don't return success for *ALL NODES* including the localhost you will not have an successful run.
 
