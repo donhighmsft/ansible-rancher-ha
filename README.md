@@ -76,7 +76,7 @@ The project uses variables stored in the `group_vars/all.yml` file that will nee
 
 ```yaml
 # Rancher 2 hostname for the portal
-rancher_lb_hostname: rke-lb-node.southcentralus.cloudapp.azure.com
+rancher_lb_hostname: rke-lb-node{number}.southcentralus.cloudapp.azure.com
 
 # Must to ssh into the nodes for ansible and rke
 usersshkey: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
