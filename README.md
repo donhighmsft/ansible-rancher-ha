@@ -29,9 +29,9 @@ Docker must be installed on your host machine *(machine running ansible playbook
 
 ### Provision Nginx Load Balancer and RKE Nodes 
 
-For your convenience `setup-azure.sh` shell script *(optional you can use your own provision script)* is provided to randomly generate nodes for the HA Install. Keep in mind this isn't an *idempotent* script but it will generate random node names. 
+For your convenience `setup-azure.sh` shell script *(optional you can use your own vm provision script)* is provided to randomly generate nodes for the HA Install. Keep in mind this isn't an *idempotent* script but it will generate random node vm names.
 
-The following actions will clone the repository, create a resource group, create a virtual network, and create 4 vm nodes.
+The following actions will clone the repository, create a resource group, create a virtual network, and create 4 random azure vm nodes.
 
 ```sh
 # clone this repo
@@ -51,13 +51,13 @@ $ make create_azure_vm_setup_nodes nodes=3
 
 ***#denotes a random generated numbers.***
 
-*`The script opens all network security groups for the virtual machines that will later be configured by ansible`*
+*`The script opens all network security groups for the virtual machines that will later be configured by ansible firewall playbook`*
 
 Once the virtual machines are created you will need the ip addresses and dns name from the virutal machine to be added to the ansible inventory and all.yml files.
 
 ## Inventory
 
-The project uses a static ansible inventory file. Static entries go into `production` file in root folder. All hosts and groups will then be collected into `rancher_kubernetes_nodes`, `rancher_kubernetes_lb`, and `local` for processing by the playbooks themselves. 
+The project uses a static ansible inventory file. Static entries go into `production` ini file in root folder. All hosts and groups will then be collected into `rancher_kubernetes_nodes`, `rancher_kubernetes_lb`, and `local` for processing by the playbooks themselves. 
 
 ```ini
 rk8s-lb-1 ansible_host=000.000.000.000 #load balancer ip
@@ -81,7 +81,7 @@ rk8s-lb-1
 The project uses variables stored in the `group_vars/all.yml` file that will need to put the dns name of your load balancer *`(rke-lb-node#.southcentralus.cloudapp.azure.com)`* and ssh-key *`~/.ssh/id_rsa.pub`* used to ssh into the nodes.
 
 ```yaml
-# Rancher 2 hostname for the portal
+# DNS for Rancher should resolve to a layer 4 load balancer
 rancher_lb_hostname: rke-lb-node{number}.southcentralus.cloudapp.azure.com
 
 # Must to ssh into the nodes for ansible and rke
@@ -102,9 +102,9 @@ make create_docker_image
 
 ## Ansible inventory test
 
-The included `Makefile` comes with numerous commands to help provision the Rancher HA Cluster. Before you build the cluster you must make sure you can `ping` the `load balancer` and `rke nodes` with ansible. If the nodes don't return success for *ALL NODES* including the localhost you will not have an successful run.
+The included `Makefile` also comes with numerous commands to help provision the Rancher HA Cluster. Before you build the cluster you must make sure you can `ping` the `load balancer` and `rke nodes` with ansible. If the nodes don't return success for *ALL NODES* including the localhost you will not have an successful run.
 
-The following `Makefile` command will ping the 4 nodes created and localhost.
+The following `Makefile` command will ping the 4 nodes created and localhost needed to run the playbooks.
 
 ```sh
 # Ping the ansible inventory
